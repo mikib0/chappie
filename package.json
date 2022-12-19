@@ -1,7 +1,7 @@
 {
   "name": "chappie",
   "version": "1.0.0",
-  "description": "",
+  "description": "Chappie is a Telegram bot that leverages the OpenAI API to allow users to communicate with a large language model directly through the Telegram platform.",
   "main": "index.js",
   "scripts": {
     "dev": "export NODE_ENV=dev;nodemon .",
@@ -9,7 +9,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "GPL",
   "dependencies": {
     "node-telegram-bot-api": "^0.60.0",
     "nodemon": "^2.0.20",
