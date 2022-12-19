@@ -4,7 +4,7 @@ const TelegramBot = require('node-telegram-bot-api');
 
 if(process.env.NODE_ENV === 'dev')
   const bot = new TelegramBot(process.env.TG_TOKEN, { polling: true });
-else if(process.env.NODE_ENV === prod) {
+else if(process.env.NODE_ENV === 'prod') {
   const bot = new TelegramBot(process.env.TG_TOKEN, { webHook: { port: PORT } });
   bot.setWebHook(`https://chappie.onrender.com/bot${bot.token}`);
 }
