@@ -1,8 +1,13 @@
 if (process.env.NODE_ENV === 'dev') require('dotenv').config();
 
 const TelegramBot = require('node-telegram-bot-api');
-const bot = new TelegramBot(process.env.TG_TOKEN, { polling: true });
 
+if(process.env.NODE_ENV === 'dev')
+  const bot = new TelegramBot(process.env.TG_TOKEN, { polling: true });
+else if(process.env.NODE_ENV === prod) {
+  const bot = new TelegramBot(process.env.TG_TOKEN, { webHook: { port: PORT } });
+  bot.setWebHook(`https://chappie.onrender.com/bot${bot.token}`);
+}
 const { Configuration, OpenAIApi } = require('openai');
 
 const configuration = new Configuration({
