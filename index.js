@@ -34,6 +34,7 @@ bot.on('message', async (msg) => {
       {
         chatTgId: msg.chat.id,
         firstName: msg.chat.first_name,
+        lastName: msg.chat.last_name,
         username: msg.chat.username,
       },
       { upsert: true, new: true },

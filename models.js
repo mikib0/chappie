@@ -12,6 +12,7 @@ const mongoose = require('mongoose');
 const User = mongoose.model('User', {
   chatTgId: Number,
   firstName: String,
+  lastName: String,
   username: String,
 });
 
