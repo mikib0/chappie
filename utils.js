@@ -7,7 +7,7 @@ const openai = new OpenAIApi(configuration);
 
 async function getResponseText(prompt) {
   const completion = await openai.createCompletion({
-    model: 'text-davinci-003',
+    model: 'text-curie-001',
     prompt: `${prompt}`,
     temperature: 1,
     max_tokens: 1024,
