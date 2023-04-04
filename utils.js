@@ -5,15 +5,17 @@ const configuration = new Configuration({
 });
 const openai = new OpenAIApi(configuration);
 
-async function getResponseText(prompt) {
-  const completion = await openai.createCompletion({
-    model: 'text-curie-001',
-    prompt: `${prompt}`,
-    temperature: 1,
-    max_tokens: 1024,
+async function getResponseText(content) {
+  const completion = await openai.createChatCompletion({
+    model: 'gpt-3.5-turbo',
+    messages: [{
+      role: 'user', content
+    }],
+    temperature: 0.8, // TODO get value from env
+    max_tokens: 1024, // TODO get value from env
   });
 
-  const response = completion.data.choices[0].text;
+  const response = completion.data.choices[0].message.content;
   return response;
 }
 
