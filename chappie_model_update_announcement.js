@@ -1,4 +1,4 @@
-export const translations = {
+const translations = {
   en: `
     <b>Apr 4 update</b> <i>chappie is now as powerful as chatGPT!</i>
 
@@ -55,7 +55,7 @@ export const translations = {
   `,
 };
 
-export const options = {
+const options = {
   parse_mode: 'HTML',
   reply_markup: {
     inline_keyboard: [
@@ -90,3 +90,8 @@ export const options = {
     ],
   },
 };
+
+module.exports = {
+  translations,
+  options
+}
