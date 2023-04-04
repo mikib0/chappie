@@ -55,7 +55,7 @@ bot.on('message', async (msg) => {
       }
     );
   } catch (error) {
-    console.log(error.response);
+    console.log(error);
     bot
       .sendMessage(
         msg.chat.id,
