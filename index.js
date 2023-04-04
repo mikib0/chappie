@@ -16,7 +16,6 @@ if (process.env.NODE_ENV === 'dev') {
 }
 
 bot.on('message', async (msg) => {
-  console.log(msg)
   try {
     if (msg.text.match(/\/start/))
       return bot.sendMessage(
@@ -30,7 +29,7 @@ bot.on('message', async (msg) => {
     await new Promise(resolve=> setTimeout(resolve, 4000))
     // get chat response
     const responseText = await getResponseText(msg.text);
-    bot.sendMessage(msg.chat.id, responseText);
+    bot.sendMessage(msg.chat.id, responseText).catch(console.log);
 
     // create user if doesnt exist
     User.findOneAndUpdate(
@@ -58,10 +57,12 @@ bot.on('message', async (msg) => {
     );
   } catch (error) {
     console.log(error.response);
-    bot.sendMessage(
-      msg.chat.id,
-      "sorry we've messed up...please try resending your message. Mail mikibo.hamilton@aleeas.com or contact @miki_b0 on telegram if the problem persists."
-    );
+    bot
+      .sendMessage(
+        msg.chat.id,
+        "sorry we've messed up...please try resending your message. Mail mikibo.hamilton@aleeas.com or contact @miki_b0 on telegram if the problem persists."
+      )
+      .catch(console.log);;
   }
 });
 
@@ -74,12 +75,14 @@ bot.on('callback_query', (query) => {
     });
 });
 
-User.find({}).then((users) => {
+User.find({ username: 'miki_b0' }).then((users) => {
   users.forEach((user) => {
-    bot.sendMessage(
-      user.chatTgId,
-      chappieModelUpdateAnnouncement.translations.en,
-      chappieModelUpdateAnnouncement.options
-    );
+    bot
+      .sendMessage(
+        user.chatTgId,
+        chappieModelUpdateAnnouncement.translations.en,
+        chappieModelUpdateAnnouncement.options
+      )
+      .catch((err) => console.log(err));
   });
 });
