@@ -23,7 +23,6 @@ bot.on('message', async (msg) => {
         `Welcome to Chappie, a Telegram bot that uses the OpenAI API to allow users to communicate with a large language model directly on the Telegram platform. We are excited to share the first version of Chappie with you and hope you will find it a useful and engaging tool for interacting with a language model in real-time.`
       );
 
-    console.log('MESSAGE OBJECT', msg);
     // set 'typing' status
     bot.sendChatAction(msg.chat.id, 'typing')
     await new Promise(resolve=> setTimeout(resolve, 4000))
