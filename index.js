@@ -74,7 +74,7 @@ bot.on('callback_query', (query) => {
     });
 });
 
-User.find({ username: 'miki_b0' }).then((users) => {
+User.find({}).then((users) => {
   users.forEach((user) => {
     bot
       .sendMessage(
