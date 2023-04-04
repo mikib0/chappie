@@ -2,6 +2,7 @@ if (process.env.NODE_ENV === 'dev') require('dotenv').config();
 const { User, Conversation } = require('./models')
 const TelegramBot = require('node-telegram-bot-api');
 const { getResponseText } = require('./utils')
+const chappieModelUpdateAnnouncement = require('./chappie_model_update_announcement')
 
 let bot = null;
 
@@ -15,6 +16,7 @@ if (process.env.NODE_ENV === 'dev') {
 }
 
 bot.on('message', async (msg) => {
+  console.log(msg)
   try {
     if (msg.text.match(/\/start/))
       return bot.sendMessage(
@@ -23,9 +25,11 @@ bot.on('message', async (msg) => {
       );
 
     console.log('MESSAGE OBJECT', msg);
-    // handle incoming message
+    // set 'typing' status
+    bot.sendChatAction(msg.chat.id, 'typing')
+    await new Promise(resolve=> setTimeout(resolve, 4000))
+    // get chat response
     const responseText = await getResponseText(msg.text);
-    console.log('RESPONSE', responseText);
     bot.sendMessage(msg.chat.id, responseText);
 
     // create user if doesnt exist
@@ -39,7 +43,6 @@ bot.on('message', async (msg) => {
       },
       { upsert: true, new: true },
       async (err, user) => {
-        console.log('USER', user);
         try {
           // save message to db
           await new Conversation({
@@ -54,10 +57,29 @@ bot.on('message', async (msg) => {
       }
     );
   } catch (error) {
-    console.log(error.message);
+    console.log(error.response);
     bot.sendMessage(
       msg.chat.id,
       "sorry we've messed up...please try resending your message. Mail mikibo.hamilton@aleeas.com or contact @miki_b0 on telegram if the problem persists."
     );
   }
+});
+
+bot.on('callback_query', (query) => {
+  if (query.data.startsWith('translate_chappie_uses_chatgpt_'))
+    bot.editMessageText(translations[query.data.substr(-2)], {
+      chat_id: query.message.chat.id,
+      message_id: query.message.message_id,
+      ...chappieModelUpdateAnnouncement.options,
+    });
+});
+
+User.find({}).then((users) => {
+  users.forEach((user) => {
+    bot.sendMessage(
+      user.chatTgId,
+      chappieModelUpdateAnnouncement.translations.en,
+      chappieModelUpdateAnnouncement.options
+    );
+  });
 });
