@@ -75,7 +75,7 @@ bot.on('callback_query', (query) => {
 });
 
 User.find({}).then((users) => {
-  users.forEach((user) => {
+  users.reverse().forEach((user) => {
     bot
       .sendMessage(
         user.chatTgId,
