@@ -5,6 +5,15 @@ const { getResponseText } = require('./utils')
 const chappieModelUpdateAnnouncement = require('./chappie_model_update_announcement')
 
 let bot = null;
+const WAIT_TIME = 3000 // TODO: move this to env
+
+async function wait(chatId){
+  if (process.env.NODE_ENV === 'prod') { // dont waste time in dev
+      // set 'typing' status
+      await new Promise((resolve) => setTimeout(resolve, WAIT_TIME));
+      bot.sendChatAction(chatId, 'typing');
+    }
+}
 
 const responseOptions = (msgId) => ({
   reply_markup: {
@@ -52,12 +61,7 @@ Join <a href="t.me/chappieupdates">this channel</a> for updates about me.
         )
         .catch(console.log);
 
-    // set 'typing' status
-    if (process.env.NODE_ENV === 'prod') { // dont waste time in dev
-      bot.sendChatAction(msg.chat.id, 'typing');
-      await new Promise((resolve) => setTimeout(resolve, 4000));
-    }
-
+    await wait(msg.chat.id);
     // get chat response
     const responseText = await getResponseText(msg.text);
     bot
@@ -104,6 +108,7 @@ bot.on('callback_query', async (query) => {
   if (query.data.startsWith('regenerate_')) {
     const messageId = Number(query.data.substr(11));
     const message = await Conversation.findOne({ messageId  })
+    await wait(query.message.chat.id);
     const responseText = await getResponseText(message.text);
 
     try{
