@@ -96,7 +96,7 @@ Join <a href="t.me/chappieupdates">this channel</a> for updates about me.
         msg.chat.id,
         "sorry we've messed up...please try resending your message. Mail mikibo.hamilton@aleeas.com or contact @miki_b0 on telegram if the problem persists."
       )
-      .catch(console.log);;
+      .catch(console.log);
   }
 });
 
