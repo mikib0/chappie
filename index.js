@@ -53,8 +53,11 @@ Join <a href="t.me/chappieupdates">this channel</a> for updates about me.
         .catch(console.log);
 
     // set 'typing' status
-    bot.sendChatAction(msg.chat.id, 'typing')
-    await new Promise(resolve=> setTimeout(resolve, 4000))
+    if (process.env.NODE_ENV === 'prod') { // dont waste time in dev
+      bot.sendChatAction(msg.chat.id, 'typing');
+      await new Promise((resolve) => setTimeout(resolve, 4000));
+    }
+
     // get chat response
     const responseText = await getResponseText(msg.text);
     bot
