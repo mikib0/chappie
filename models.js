@@ -17,6 +17,7 @@ const User = mongoose.model('User', {
 });
 
 const Conversation = mongoose.model('Conversation', {
+  messageId: Number,
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Users'

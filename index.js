@@ -6,6 +6,25 @@ const chappieModelUpdateAnnouncement = require('./chappie_model_update_announcem
 
 let bot = null;
 
+const responseOptions = (msgId) => ({
+  reply_markup: {
+    inline_keyboard: [
+      [
+        // {
+        //   text: '«',
+        //   callback_data: `prev_` + msg.message_id
+        // },
+        {
+          text: 'regenerate',
+          callback_data: 'regenerate_' + msgId,
+        },
+        // next,
+      ],
+    ],
+  },
+  reply_to_message_id: msgId,
+});
+
 if (process.env.NODE_ENV === 'dev') {
   bot = new TelegramBot(process.env.CHAPPIE_TEST_TOKEN, { polling: true });
 } else if (process.env.NODE_ENV === 'prod') {
@@ -38,7 +57,9 @@ Join <a href="t.me/chappieupdates">this channel</a> for updates about me.
     await new Promise(resolve=> setTimeout(resolve, 4000))
     // get chat response
     const responseText = await getResponseText(msg.text);
-    bot.sendMessage(msg.chat.id, responseText).catch(console.log);
+    bot
+      .sendMessage(msg.chat.id, responseText, responseOptions(msg.message_id))
+      .catch(console.log);
 
     // create user if doesnt exist
     User.findOneAndUpdate(
@@ -54,6 +75,7 @@ Join <a href="t.me/chappieupdates">this channel</a> for updates about me.
         try {
           // save message to db
           await new Conversation({
+            messageId: msg.message_id,
             user: user._id,
             text: msg.text,
             response: responseText,
@@ -75,7 +97,19 @@ Join <a href="t.me/chappieupdates">this channel</a> for updates about me.
   }
 });
 
-bot.on('callback_query', (query) => {
+bot.on('callback_query', async (query) => {
+  if (query.data.startsWith('regenerate_')) {
+    const messageId = Number(query.data.substr(11));
+    const message = await Conversation.findOne({ messageId  })
+    const responseText = await getResponseText(message.text);
+
+    try{
+      bot
+      .sendMessage(query.message.chat.id, responseText, responseOptions(messageId))
+    } catch(err){
+      console.log(err)
+    }
+      }
   if (query.data.startsWith('translate_chappie_uses_chatgpt_'))
     bot.editMessageText(translations[query.data.substr(-2)], {
       chat_id: query.message.chat.id,
