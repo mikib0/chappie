@@ -18,10 +18,20 @@ if (process.env.NODE_ENV === 'dev') {
 bot.on('message', async (msg) => {
   try {
     if (msg.text.match(/\/start/))
-      return bot.sendMessage(
-        msg.chat.id,
-        `Welcome to Chappie, a Telegram bot that uses the OpenAI API to allow users to communicate with a large language model directly on the Telegram platform. We are excited to share the first version of Chappie with you and hope you will find it a useful and engaging tool for interacting with a language model in real-time.`
-      );
+      return bot
+        .sendMessage(
+          msg.chat.id,
+          `
+          Hello, <b>${msg.chat.first_name}</b>!
+Welcome to chappie, your AI assistant powered by chatGPT. Talk to me and I'll give you human like response. Go ahead and start sending messages.
+
+Join <a href="t.me/chappieupdates">this channel</a> for updates about me.
+        `,
+          {
+            parse_mode: 'HTML',
+          }
+        )
+        .catch(console.log);
 
     // set 'typing' status
     bot.sendChatAction(msg.chat.id, 'typing')
