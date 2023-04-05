@@ -13,10 +13,10 @@
   "dependencies": {
     "mongoose": "^6.8.1",
     "node-telegram-bot-api": "^0.60.0",
-    "nodemon": "^2.0.20",
     "openai": "^3.2.1"
   },
   "devDependencies": {
+    "nodemon": "^2.0.20",
     "dotenv": "^16.0.3"
   }
 }
