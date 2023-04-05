@@ -74,14 +74,14 @@ bot.on('callback_query', (query) => {
     });
 });
 
-User.find({}).then((users) => {
-  users.reverse().forEach((user) => {
-    bot
-      .sendMessage(
-        user.chatTgId,
-        chappieModelUpdateAnnouncement.translations.en,
-        chappieModelUpdateAnnouncement.options
-      )
-      .catch((err) => console.log(err));
-  });
-});
+// User.find({}).then((users) => {
+//   users.reverse().forEach((user) => {
+//     bot
+//       .sendMessage(
+//         user.chatTgId,
+//         chappieModelUpdateAnnouncement.translations.en,
+//         chappieModelUpdateAnnouncement.options
+//       )
+//       .catch((err) => console.log(err));
+//   });
+// });
