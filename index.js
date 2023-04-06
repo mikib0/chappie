@@ -51,7 +51,7 @@ bot.on('message', async (msg) => {
           msg.chat.id,
           `
           Hello, <b>${msg.chat.first_name}</b>!
-Welcome to chappie, your AI assistant powered by chatGPT. Talk to me and I'll give you human like response. Go ahead and start sending messages.
+Welcome to chappie, your AI assistant powered by chatGPT. Talk to me and I'll give you human like response. Try it now!
 
 Join <a href="t.me/chappieupdates">this channel</a> for updates about me.
         `,
