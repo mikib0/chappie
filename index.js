@@ -3,6 +3,14 @@ const { User, Conversation } = require('./models')
 const TelegramBot = require('node-telegram-bot-api');
 const { getResponseText } = require('./utils')
 const chappieModelUpdateAnnouncement = require('./chappie_model_update_announcement')
+const Sentry = require('@sentry/node');
+
+Sentry.init({
+  dsn: 'https://6ba41d8320c04089864253cf1faabbd6@o4504962327576576.ingest.sentry.io/4504967188119552',
+
+  tracesSampleRate: 0.2,
+});
+
 
 let bot = null;
 const WAIT_TIME = 3000 // TODO: move this to env
@@ -36,7 +44,7 @@ function sendMessage(chatId, text, msgId) {
     reply_to_message_id: msgId,
   };
 
-  return bot.sendMessage(chatId, text, responseOptions);
+  return bot.sendMessage(chatId, text, responseOptions).catch(Sentry.captureException);
 }
 
 if (process.env.NODE_ENV === 'dev') {
@@ -64,13 +72,12 @@ Join <a href="t.me/chappieupdates">this channel</a> for updates about me.
             parse_mode: 'HTML',
           }
         )
-        .catch(console.log);
+        .catch(Sentry.captureException);
 
     await wait(msg.chat.id);
     // get chat response
     const responseText = await getResponseText(msg.text);
-
-    sendMessage(msg.chat.id, responseText, msg.message_id).catch(console.log);
+    sendMessage(msg.chat.id, responseText, msg.message_id);
 
     // create user if doesnt exist
     User.findOneAndUpdate(
@@ -83,6 +90,7 @@ Join <a href="t.me/chappieupdates">this channel</a> for updates about me.
       },
       { upsert: true, new: true },
       async (err, user) => {
+        if(err) Sentry.captureException(err);
         try {
           // save message to db
           await new Conversation({
@@ -93,17 +101,17 @@ Join <a href="t.me/chappieupdates">this channel</a> for updates about me.
             date: new Date(msg.date * 1000),
           }).save();
         } catch (error) {
-          console.log('SAVING MSG ERROR:', error);
+          Sentry.captureException(error);
         }
       }
     ); // TODO handle rejection!
   } catch (error) {
-    console.log(error);
+    Sentry.captureException(error);
     sendMessage(
       msg.chat.id,
       ERROR_MESSAGE,
       msg.message_id
-    ).catch(console.log);
+    )
   }
 });
 
@@ -115,11 +123,9 @@ bot.on('callback_query', async (query) => {
 
     try {
       const responseText = await getResponseText(message.text); // TODO handle rejection!
-      sendMessage(query.message.chat.id, responseText, messageId).catch(
-        console.log
-      );
+      sendMessage(query.message.chat.id, responseText, messageId)
     } catch (err) {
-      sendMessage(query.message.chat.id, ERROR_MESSAGE, messageId).catch(console.log);
+      sendMessage(query.message.chat.id, ERROR_MESSAGE, messageId);
     }
   }
   if (query.data.startsWith('translate_chappie_uses_chatgpt_'))
