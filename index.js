@@ -6,6 +6,7 @@ const chappieModelUpdateAnnouncement = require('./chappie_model_update_announcem
 
 let bot = null;
 const WAIT_TIME = 3000 // TODO: move this to env
+const ERROR_MESSAGE = "sorry we've messed up...please try resending your message. Mail mikibo.hamilton@aleeas.com or contact @miki_b0 on telegram if the problem persists."
 
 async function wait(chatId){
   if (process.env.NODE_ENV === 'prod') { // dont waste time in dev
@@ -15,24 +16,28 @@ async function wait(chatId){
     }
 }
 
-const responseOptions = (msgId) => ({
-  reply_markup: {
-    inline_keyboard: [
-      [
-        // {
-        //   text: '«',
-        //   callback_data: `prev_` + msg.message_id
-        // },
-        {
-          text: 'regenerate',
-          callback_data: 'regenerate_' + msgId,
-        },
-        // next,
+function sendMessage(chatId, text, msgId) {
+  const responseOptions = {
+    reply_markup: {
+      inline_keyboard: [
+        [
+          // {
+          //   text: '«',
+          //   callback_data: `prev_` + msg.message_id
+          // },
+          {
+            text: 'regenerate',
+            callback_data: 'regenerate_' + msgId,
+          },
+          // next,
+        ],
       ],
-    ],
-  },
-  reply_to_message_id: msgId,
-});
+    },
+    reply_to_message_id: msgId,
+  };
+
+  return bot.sendMessage(chatId, text, responseOptions);
+}
 
 if (process.env.NODE_ENV === 'dev') {
   bot = new TelegramBot(process.env.CHAPPIE_TEST_TOKEN, { polling: true });
@@ -64,9 +69,8 @@ Join <a href="t.me/chappieupdates">this channel</a> for updates about me.
     await wait(msg.chat.id);
     // get chat response
     const responseText = await getResponseText(msg.text);
-    bot
-      .sendMessage(msg.chat.id, responseText, responseOptions(msg.message_id))
-      .catch(console.log);
+
+    sendMessage(msg.chat.id, responseText, msg.message_id).catch(console.log);
 
     // create user if doesnt exist
     User.findOneAndUpdate(
@@ -92,32 +96,32 @@ Join <a href="t.me/chappieupdates">this channel</a> for updates about me.
           console.log('SAVING MSG ERROR:', error);
         }
       }
-    );
+    ); // TODO handle rejection!
   } catch (error) {
     console.log(error);
-    bot
-      .sendMessage(
-        msg.chat.id,
-        "sorry we've messed up...please try resending your message. Mail mikibo.hamilton@aleeas.com or contact @miki_b0 on telegram if the problem persists."
-      )
-      .catch(console.log);
+    sendMessage(
+      msg.chat.id,
+      ERROR_MESSAGE,
+      msg.message_id
+    ).catch(console.log);
   }
 });
 
 bot.on('callback_query', async (query) => {
   if (query.data.startsWith('regenerate_')) {
     const messageId = Number(query.data.substr(11));
-    const message = await Conversation.findOne({ messageId  })
+    const message = await Conversation.findOne({ messageId });
     await wait(query.message.chat.id);
-    const responseText = await getResponseText(message.text);
 
-    try{
-      bot
-      .sendMessage(query.message.chat.id, responseText, responseOptions(messageId))
-    } catch(err){
-      console.log(err)
+    try {
+      const responseText = await getResponseText(message.text); // TODO handle rejection!
+      sendMessage(query.message.chat.id, responseText, messageId).catch(
+        console.log
+      );
+    } catch (err) {
+      sendMessage(query.message.chat.id, ERROR_MESSAGE, messageId).catch(console.log);
     }
-      }
+  }
   if (query.data.startsWith('translate_chappie_uses_chatgpt_'))
     bot.editMessageText(translations[query.data.substr(-2)], {
       chat_id: query.message.chat.id,
