@@ -11,12 +11,14 @@
   "author": "",
   "license": "GPL",
   "dependencies": {
+    "@sentry/node": "^7.47.0",
     "mongoose": "^6.8.1",
     "node-telegram-bot-api": "^0.60.0",
-    "openai": "^3.2.1"
+    "openai": "^3.2.1",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.20",
-    "dotenv": "^16.0.3"
+    "dotenv": "^16.0.3",
+    "nodemon": "^2.0.20"
   }
 }

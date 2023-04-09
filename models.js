@@ -14,6 +14,8 @@ const User = mongoose.model('User', {
   firstName: String,
   lastName: String,
   username: String,
+  isHavingDialog: Boolean,
+  currentDialogId: String,
 });
 
 const Conversation = mongoose.model('Conversation', {
@@ -25,6 +27,8 @@ const Conversation = mongoose.model('Conversation', {
   text: String,
   response: String,
   date: Date,
+  dialogId: String,
+  flagged: Boolean
 });
 
 module.exports = {
