@@ -110,7 +110,7 @@ async function updateOrCreateUser(msg) {
 async function getAndSendResponse(msg, user) {
   const { isHavingDialog, currentDialogId } = user;
   if (isHavingDialog) {
-    const { message_id } = await bot.sendMessage(
+    const { message_id: warningMessage_Id } = await bot.sendMessage(
       msg.chat.id,
       "Responses in a dialog might be slower and consume more tokens. We recommend that you end it (/enddialog) when you don't need it." // TODO format  as system message
     );
@@ -122,10 +122,8 @@ async function getAndSendResponse(msg, user) {
       msg.text
     );
 
-    bot.editMessageText(responseText, {
-      chat_id: msg.chat.id,
-      message_id
-    })
+    await bot.deleteMessage(msg.chat.id, warningMessage_Id)
+    sendMessage(msg.chat.id, responseText, msg.message_id)
 
     if(totalTokens == MAX_TOKEN_LIMIT){
       await User.findOneAndUpdate(
