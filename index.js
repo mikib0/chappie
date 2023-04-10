@@ -240,11 +240,14 @@ bot.on('callback_query', async (query) => {
     }
   }
   if (query.data.startsWith('translate_chappie_uses_chatgpt_'))
-    bot.editMessageText(translations[query.data.substr(-2)], {
-      chat_id: chatId,
-      message_id: query.message.message_id,
-      ...chappieModelUpdateAnnouncement.options,
-    });
+    bot.editMessageText(
+      chappieModelUpdateAnnouncement.translations[query.data.substr(-2)],
+      {
+        chat_id: chatId,
+        message_id: query.message.message_id,
+        ...chappieModelUpdateAnnouncement.options,
+      }
+    );
 });
 
 // User.find({}).then((users) => {
