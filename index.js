@@ -1,7 +1,7 @@
 if (process.env.NODE_ENV === 'dev') require('dotenv').config();
 const { User, Conversation } = require('./models')
 const TelegramBot = require('node-telegram-bot-api');
-const { getResponseText } = require('./utils')
+const { getResponseText, getImage } = require('./utils')
 const chappieModelUpdateAnnouncement = require('./chappie_model_update_announcement')
 const Sentry = require('@sentry/node');
 const { v4: uuid } = require('uuid');
@@ -42,15 +42,10 @@ function sendMessage(chatId, text, msgId) {
     reply_markup: {
       inline_keyboard: [
         [
-          // {
-          //   text: '«',
-          //   callback_data: `prev_` + msg.message_id
-          // },
           {
             text: 'regenerate',
             callback_data: 'regenerate_' + msgId,
           },
-          // next,
         ],
       ],
     },
@@ -197,6 +192,19 @@ Join <a href="t.me/chappieupdates">this channel</a> for updates about me.
       return bot
         .sendMessage(msg.chat.id, 'Dialog has ended.')
         .catch(Sentry.captureException);
+    } else if(msg.text.match(/^\/image$/)){
+      await wait()
+      return bot.sendMessage(
+        msg.chat.id,
+        `
+      📷 Image generation \n\n Type: /image followed by a detailed image description \n Example: /image a white siamese cat
+      `) // TODO replace '[new feature] ...' title with 'image generation' in translations so and add translation buttons to this message
+    } else if(msg.text.match(/^\/image/)){
+      const imgPrompt = msg.text.substr(6) // 6 is the length of '/image'
+      const imgUrl = await getImage(imgPrompt)
+      return bot.sendPhoto(msg.chat.id, imgUrl, {
+        reply_to_message_id: msg.message_id,
+      });
     }
 
     const { responseText, finishReason } = await getAndSendResponse(msg, user);

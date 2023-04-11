@@ -34,6 +34,17 @@ async function getResponseText(context, input) {
   };
 }
 
+async function getImage(prompt){
+  const response = await openai.createImage({
+    prompt,
+    n: 1,
+    size: '512x512',
+  });
+  const image_url = response.data.data[0].url;
+  return image_url
+}
+
 module.exports = {
-  getResponseText
+  getResponseText,
+  getImage
 }
