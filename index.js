@@ -195,7 +195,6 @@ Join <a href="t.me/chappieupdates">this channel</a> for updates about me.
         .sendMessage(msg.chat.id, 'Dialog has ended.')
         .catch(Sentry.captureException);
     } else if(msg.text.match(/^\/image$/)){
-      await wait()
       return bot.sendMessage(
         msg.chat.id,
         `
@@ -203,6 +202,7 @@ Join <a href="t.me/chappieupdates">this channel</a> for updates about me.
       `) // TODO replace '[new feature] ...' title with 'image generation' in translations so and add translation buttons to this message
     } else if(msg.text.match(/^\/image/)){
       const imgPrompt = msg.text.substr(6) // 6 is the length of '/image'
+      await wait(msg.chat.id);
       const imgUrl = await getImage(imgPrompt)
       return bot.sendPhoto(msg.chat.id, imgUrl, {
         reply_to_message_id: msg.message_id,
