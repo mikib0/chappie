@@ -2,7 +2,8 @@ if (process.env.NODE_ENV === 'dev') require('dotenv').config();
 const { User, Conversation } = require('./models')
 const TelegramBot = require('node-telegram-bot-api');
 const { getResponseText, getImage } = require('./utils')
-const chappieModelUpdateAnnouncement = require('./chappie_model_update_announcement')
+const chappieModelUpdateAnnouncement = require('./chappie_model_update_announcement') // TODO just make a new module, announcements.js, that holds all announcements
+const imageGenarationAnnounment = require('./image_generation_announment');
 const Sentry = require('@sentry/node');
 const { v4: uuid } = require('uuid');
 
@@ -246,8 +247,7 @@ bot.on('callback_query', async (query) => {
       Sentry.captureException(err);
       sendMessage(chatId, ERROR_MESSAGE, messageId);
     }
-  }
-  if (query.data.startsWith('translate_chappie_uses_chatgpt_'))
+  } else if (query.data.startsWith('translate_chappie_uses_chatgpt_'))
     bot.editMessageText(
       chappieModelUpdateAnnouncement.translations[query.data.substr(-2)],
       {
@@ -256,16 +256,14 @@ bot.on('callback_query', async (query) => {
         ...chappieModelUpdateAnnouncement.options,
       }
     );
-});
+  else if (query.data.startsWith('translate_image_generation_'))
+    bot.editMessageText(
+      image_genaration_announment.translations[query.data.substr(-2)],
+      {
+        chat_id: query.message.chat.id,
+        message_id: query.message.message_id,
+        ...imageGenarationAnnounment.options,
+      }
+    );
 
-// User.find({}).then((users) => {
-//   users.reverse().forEach((user) => {
-//     bot
-//       .sendMessage(
-//         user.chatTgId,
-//         chappieModelUpdateAnnouncement.translations.en,
-//         chappieModelUpdateAnnouncement.options
-//       )
-//       .catch((err) => console.log(err));
-//   });
-// });
+});
