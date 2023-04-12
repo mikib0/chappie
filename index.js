@@ -258,7 +258,7 @@ bot.on('callback_query', async (query) => {
     );
   else if (query.data.startsWith('translate_image_generation_'))
     bot.editMessageText(
-      image_genaration_announment.translations[query.data.substr(-2)],
+      imageGenarationAnnounment.translations[query.data.substr(-2)],
       {
         chat_id: query.message.chat.id,
         message_id: query.message.message_id,
