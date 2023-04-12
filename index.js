@@ -39,6 +39,7 @@ async function wait(chatId) {
 }
 
 function sendMessage(chatId, text, msgId) {
+  // TODO reply even when message is not found
   const responseOptions = {
     reply_markup: {
       inline_keyboard: [
@@ -255,7 +256,7 @@ bot.on('callback_query', async (query) => {
         message_id: query.message.message_id,
         ...chappieModelUpdateAnnouncement.options,
       }
-    );
+    ).catch(err=>Sentry.captureException(err));
   else if (query.data.startsWith('translate_image_generation_'))
     bot.editMessageText(
       imageGenarationAnnounment.translations[query.data.substr(-2)],
@@ -264,6 +265,6 @@ bot.on('callback_query', async (query) => {
         message_id: query.message.message_id,
         ...imageGenarationAnnounment.options,
       }
-    );
+    ).catch(err=> Sentry.captureException(err));
 
 });
