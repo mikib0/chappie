@@ -60,11 +60,12 @@ async function getImage(prompt) {
 const enigma = {
   encrypt(str) {
     // TODO return encrypted text
-    return btoa(str);
+    return Buffer.from(new String(str), 'utf-8').toString('base64');
   },
   decrypt(str) {
     // TODO return decrypted text
-    return atob(str);
+    
+    return Buffer.from(str, 'base64').toString('utf-8');
   },
 };
 
