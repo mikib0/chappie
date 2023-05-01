@@ -14,7 +14,7 @@ const {
   getPurchaseOptions,
 } = require('../utils');
 const { v4: uuid } = require('uuid');
-const { updateUserTokens, saveConversation } = require('../db/utils');
+const { updateUserTokens, saveConversation, updateMaal } = require('../db/utils');
 const cloudinary = require('cloudinary').v2;
 const { User } = require('../db/models');
 
@@ -68,7 +68,7 @@ async function handleImage({
   logger.info(`generating photo`);
   const imgUrl = await getImage(imagePrompt);
 
-  if (!user.paid) updateAvailableFreeTokens(TOKENS_PER_IMAGE);
+  if (!user.paid) updateMaal(TOKENS_PER_IMAGE, 0);
 
   logger.info(`updating user tokens`);
   await updateUserTokens(logger, chatId, TOKENS_PER_IMAGE, user);
