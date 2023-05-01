@@ -116,21 +116,19 @@ async function handleOnText(msg, logger) {
   const supportMatch = text.match(/^\/support/)
   
   const args = { logger, chatId, date, langCode, text, messageId };
+  let user
 
   try {
     if (referralMatch) {
       handleReferral({ ...args, refreeId: referralMatch[1], msg });
       return;
     }
-    const user = await updateOrCreateUser(msg);
+    // create user if doesnt exist
+    logger.info('update or create user');
+    user = await updateOrCreateUser(msg);
     args.user = user;
     if (startMatch) {
-      logger.info(`/start command from chat ${chatId}`);
-      // create user if doesnt exist
-      logger.info('updating or creating user');
-      await updateOrCreateUser(msg);
       logger.info('sending /start reply to user');
-      // TODO implement replacers
       bot
         .sendMessage(
           chatId,
