@@ -1,4 +1,4 @@
-if (process.env.NODE_ENV !== 'dev') require('dotenv').config();
+if (process.env.NODE_ENV == 'dev') require('dotenv').config();
 const express = require('express');
 // const bot = require('../bot.js');
 const paypal = require('./paypal-api.js');
