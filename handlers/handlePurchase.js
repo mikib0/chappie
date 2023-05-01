@@ -12,8 +12,9 @@ async function handlePurchase({ chatId, logger, user }) {
   logger.info(`sending purchase plans to ${chatId}`)
   bot.sendMessage(
     chatId,
-    message(PAID_USER_BENEFITS, langCode, translate, { parse_mode: 'HTML' }),
+    message(PAID_USER_BENEFITS, langCode, translate),
     {
+      parse_mode: 'HTML',
       reply_markup: {
         inline_keyboard: getPurchaseOptions(),
       },
