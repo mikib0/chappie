@@ -2,6 +2,7 @@ const { DAILY_INCOMING, MAX_TOKENS } = require('../constants');
 const models = require('./models');
 const { User, Conversation } = models;
 const redis = require('./redis');
+const { tomorrowMidnight } = require('../utils');
 
 // TODO this operation must not fail
 async function updateUserTokens(logger, chatId, totalTokens, user) {
@@ -53,17 +54,38 @@ async function updateUserTokens(logger, chatId, totalTokens, user) {
 // TODO use doc comment
 async function updateOrCreateUser(msg) {
   // update the user info if the user exists else create a new user. and return the updated or created document
-  return await User.findOneAndUpdate(
+  let user = await User.findOneAndUpdate(
     { chatTgId: msg.chat.id },
     {
       chatTgId: msg.chat.id,
       firstName: msg.chat.first_name,
       lastName: msg.chat.last_name,
       username: msg.chat.username,
-      langCode: msg.from.language_code ?? 'en'
+      langCode: msg.from.language_code ?? 'en',
     },
-    { upsert: true, new: true }
+    { upsert: false, new: true }
   );
+// TODO what if i can just set default values for the fields 
+    if (!user) {
+      user = await User({
+        chatTgId: msg.chat.id,
+        firstName: msg.chat.first_name,
+        lastName: msg.chat.last_name,
+        username: msg.chat.username,
+        langCode: msg.from.language_code ?? 'en',
+        translate: true,
+        tokens: {
+          purchased: 0,
+          referral: 0,
+          free: 0,
+          freeTokens_expiryDate_ms: tomorrowMidnight(),
+        },
+        purchases: [],
+        paid: false,
+      }).save();
+    }
+
+    return user;
 }
 
 async function saveConversation({
