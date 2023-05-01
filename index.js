@@ -51,10 +51,10 @@ const executionId = uuid();
 const processLogger = logFather.child({ label: 'process', id: executionId });
 
 processLogger.info('app starts');
-const PORT = process.env.PORT ?? 8922;
-paymentServer.listen(PORT, () => {
-  processLogger.info(`Server listening at ${PORT}`);
-});
+// const PORT = process.env.PORT ?? 8922;
+// paymentServer.listen(PORT, () => {
+//   processLogger.info(`Server listening at ${PORT}`);
+// });
 
 async function getAccountInfo(msg){
   const user = await updateOrCreateUser(msg); // TODO this is redundant
