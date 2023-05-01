@@ -96,6 +96,7 @@ bot.on('channel_post', (msg) => {
 });
 
 async function handleOnText(msg, logger) {
+  if(new String(msg.chat.id).startsWith('-')) return;
   const chatId = msg.chat.id;
   const messageId = msg.message_id;
   const userTgId = msg.from.id;
