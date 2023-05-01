@@ -114,6 +114,36 @@ información de comandos:
     BACK_TO_PURCHASE: '« Назад к планам покупки',
     TRANSLATION: 'перевод',
   },
+  fr: {
+START_MSG: `Salut, <b>%%first_name%%</b> !\nJe suis chappie, votre assistant IA alimenté par chatGPT. Parlez-moi et je vous donnerai une réponse humaine et je peux également générer des images ! —tapez /help pour plus d'informations. Essayez maintenant !\n\nRejoignez <a href="t.me/chappieupdates">ce canal</a> pour les mises à jour sur chappie.`,
+NO_ENOUGH_IMAGE_TOKENS:
+"Vous n'avez pas assez de jetons pour générer une image. \nVous pouvez obtenir des jetons gratuits en recommandant quelqu'un en utilisant votre lien de parrainage <code>%%reflink%%</code> \nOu vous pouvez acheter des jetons (/purchase).",
+RESPONSE_GEN_ERROR_MESSAGE:
+"une erreur s'est produite...veuillez réessayer en renvoyant votre message. Envoyez un mail à mikibo.hamilton@aleeas.com ou contactez @miki_b0 sur Telegram si le problème persiste.",
+IMAGE_GEN_HELP:
+`📷 Génération d'image \n\n Tapez: /image suivi d'une description détaillée de l'image \n Exemple: /image un chat siamois blanc`,
+PURCHASED: 'acheté',
+FREE: 'gratuit',
+REFERRAL: 'parrainage',
+REFERRAL_MSG: `obtenez des jetons gratuits en recommandant quelqu'un en utilisant votre lien de parrainage.`,
+PURCHASED_SUCCESSFUL: `Félicitations🙌 votre achat de %%tokens%% jetons a été effectué avec succès !`,
+PAID_USER_BENEFITS: `Vos avantages en tant qu'utilisateur payant:\n- les jetons achetés n'expirent jamais 🕒\n- réponse plus rapide 🚀\n- disponibilité constante 🌐\n- priorité de support plus élevée 🚨`,
+BROKE_MSG: `<b>Vous n'avez pas de jetons.</b>\nVos jetons gratuits quotidiens seront financés par %%tomorrowMidNight%%.\nVous pouvez obtenir des jetons gratuits en recommandant quelqu'un en utilisant votre lien de parrainage <code>%%reflink%%</code> \nOu vous pouvez acheter des jetons (/purchase).`,
+NO_FREE_TOKENS: `Désolé, il n'y a pas de jetons gratuits disponibles pour répondre à votre demande pour le moment. Veuillez revenir plus tard, ou vous pouvez acheter des jetons.`,
+HELP: `Salut ! Je suis chappie, votre assistant IA alimenté par chatGPT. Je peux donner des réponses humaines à vos questions et également générer des images. Essayez maintenant ! \n commandes info: /image [votre prompt] - générer une image /reflink - obtenir votre lien de recommandation - vous obtenez une récompense de jetons lorsque qu'un nouvel utilisateur commence à utiliser chappie en utilisant le lien /account - voir vos informations de compte et les paramètres /balance - voir votre solde /purchase - acheter des jetons /support - contacter le support`,
+SUPPORT: `hé, veuillez contacter @miki_b0 sur Telegram pour tout problème ou suggestion que vous pourriez avoir. Merci😊`,
+ACCOUNT_INFO: `salut <b>%%firstName%%!</b>\ntype de compte: %%accountType%% \nlien de recommandation: <code>%%refLink%%</code>\nsolde: \n\t %%purchased%% parrainage: %%referral%%\n\t  %%free%%\n<i>%%referralMsg%%</i>`,
+PAID: 'payé',
+FREE: 'gratuit',
+PURCHASE_TOKENS: 'acheter des jetons',
+DONATE: 'donner',
+REGENERATE: 'régénérer',
+BACK_TO_ACCOUNT: '« Retour au Compte',
+CHECKOUT: `Vous achetez le plan <b>%%thePlanName.</b> \nJetons: %%tokens%%\nPrix : $%%price%%\nMéthodes de paiement acceptées :\n\t- 🅿️ PayPal\n\t- 💳 Carte de débit ou de crédit\n\n🛈 Cliquez sur le bouton <b>« Acheter »</b> pour procéder.\n`,
+PURCHASE: 'achat',
+BACK_TO_PURCHASE: '« Retour aux Plans d\'achat',
+TRANSLATION: 'traduction',
+},
   ar: {
     START_MSG:
       '.مرحباً، <b>%%first_name%%</b>!\nأنا تشابي، مساعدك الذكي المدعوم بتقنية تشات جي بي تي. تحدث معي وسأعطيك رداً شبيهاً بالإنسان ويمكنني أيضاً إنشاء صور! —اكتب /help للمزيد من المعلومات. جرب الآن!\n\nانضم إلى <a href="t.me/chappieupdates">هذه القناة</a> للحصول على تحديثات حول تشابي',
