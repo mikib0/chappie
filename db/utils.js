@@ -1,6 +1,3 @@
-const {
-  logger,
-} = require('.pnpm/@sentry+utils@7.47.0/node_modules/@sentry/utils');
 const { DAILY_INCOMING, MAX_TOKENS } = require('../constants');
 const models = require('./models');
 const { User, Conversation } = models;
