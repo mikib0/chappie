@@ -64,19 +64,21 @@ async function handleText({
     // if the free user doesnt have freetokens and referral tokens
     if (!hasFreeTokens && !hasReferralTokens) {
       logger.debug(`this bro is broke🤣`);
-      bot.sendMessage(
-        chatId,
-        message(BROKE_MSG, user.langCode, user.translate, {
-          tomorrowMidNight: new Date(tomorrowMidnight()),
-          reflink: getReferralLink(chatId),
-        }),
-        {
-          reply_markup: {
-            inline_keyboard: getPurchaseOptions(),
-          },
-          parse_mode: 'HTML',
-        }
-      );
+      bot
+        .sendMessage(
+          chatId,
+          message(BROKE_MSG, user.langCode, user.translate, {
+            tomorrowMidNight: new Date(tomorrowMidnight()),
+            reflink: getReferralLink(chatId),
+          }),
+          {
+            reply_markup: {
+              inline_keyboard: getPurchaseOptions(),
+            },
+            parse_mode: 'HTML',
+          }
+        )
+        .catch((err) => logger.error(`error while sending BROKE_MSG`, err));
       return;
     }
 
@@ -87,12 +89,18 @@ async function handleText({
       logger.debug(`sorry, maal cant feed you`);
       updateMaal(maxTokens, 0);
       logger.notice(`baitul mal is running out of fund🚨`);
-      bot.sendMessage(chatId, `<i>${message(NO_FREE_TOKENS, user.langCode, user.translate)}</i>`, {
-        reply_markup: {
-          inline_keyboard: getPurchaseOptions(),
-        },
-        parse_mode: 'HTML'
-      })
+      bot
+        .sendMessage(
+          chatId,
+          `<i>${message(NO_FREE_TOKENS, user.langCode, user.translate)}</i>`,
+          {
+            reply_markup: {
+              inline_keyboard: getPurchaseOptions(),
+            },
+            parse_mode: 'HTML',
+          }
+        )
+        .catch((err) => logger.error(`error while sending NO_FREE_TOKENS`, err));
       return;
     }
   }

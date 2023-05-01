@@ -19,7 +19,7 @@ async function handlePurchase({ chatId, logger, user }) {
         inline_keyboard: getPurchaseOptions(),
       },
     }
-  );
+  ).catch(err=>logger.error(`error while sending /purchase`, err));
 }
 
 module.exports = handlePurchase

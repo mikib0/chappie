@@ -80,13 +80,13 @@ async function getAccountInfo(msg){
   });
 }
 
-async function handleAccount(msg, langCode, translate) {
+async function handleAccount(msg, langCode, translate, logger) {
   bot.sendMessage(msg.chat.id, await getAccountInfo(msg), {
     reply_markup: {
       inline_keyboard: getAccountKeyboard(langCode, translate),
     },
     parse_mode: 'HTML',
-  });
+  }).catch(err=>logger.error(`error while sending message`, err));
 
   return;
 }
@@ -145,36 +145,44 @@ async function handleOnText(msg, logger) {
       return;
     } else if(helpMatch){
       logger.info(`pile is looking for help`)
-      bot.sendMessage(chatId, message(HELP, langCode, user.translate))
+      bot.sendMessage(chatId, message(HELP, langCode, user.translate)).catch(err=>logger.error(`error while sending HELP`, err))
     } else if(supportMatch){
       logger.info(`this guy wants to disbturb me with complaints🙄`);
-      bot.sendMessage(chatId, message(SUPPORT, langCode, user.translate))
+      bot
+        .sendMessage(chatId, message(SUPPORT, langCode, user.translate))
+        .catch((err) => logger.error(`error while sending SUPPORT`, err));
     } else if (refLinkMatch) {
       logger.info(`the guy wants to get his referral link`);
-      bot.sendMessage(chatId, `<code>${getReferralLink(chatId)}</code>`, {parse_mode: 'HTML'});
+      bot
+        .sendMessage(chatId, `<code>${getReferralLink(chatId)}</code>`, {
+          parse_mode: 'HTML',
+        })
+        .catch((err) => logger.error(`error while sending reflink`, err));
     } else if (balanceMatch) {
       logger.info(`pile wants to see his balance`);
-      bot.sendMessage(
-        chatId,
-        user.paid
-          ? `${message(PURCHASED, langCode, user.translate)}: ${
-              user.tokens.purchased
-            }\n${message(REFERRAL, langCode, user.translate)}: ${
-              user.tokens.referral
-            }`
-          : `${message(FREE, langCode, user.translate)}: ${Math.abs(
-              DAILY_INCOMING + user.tokens.free
-            )}\n${message(REFERRAL, langCode, user.translate)}: ${
-              user.tokens.referral
-            }\n<i>${message(REFERRAL_MSG, langCode, user.translate)}</i>`,
-        {
-          parse_mode: 'HTML',
-        }
-      );
+      bot
+        .sendMessage(
+          chatId,
+          user.paid
+            ? `${message(PURCHASED, langCode, user.translate)}: ${
+                user.tokens.purchased
+              }\n${message(REFERRAL, langCode, user.translate)}: ${
+                user.tokens.referral
+              }`
+            : `${message(FREE, langCode, user.translate)}: ${Math.abs(
+                DAILY_INCOMING + user.tokens.free
+              )}\n${message(REFERRAL, langCode, user.translate)}: ${
+                user.tokens.referral
+              }\n<i>${message(REFERRAL_MSG, langCode, user.translate)}</i>`,
+          {
+            parse_mode: 'HTML',
+          }
+        )
+        .catch((err) => logger.error(`error while sending balance`, err));
     } else if (purchaseMatch) {
       handlePurchase(args);
     } else if (accountMatch) {
-      handleAccount(msg, langCode, user.translate);
+      handleAccount(msg, langCode, user.translate, logger);
     } else if (imageMatch) {
       handleImage({ ...args, imagePrompt: imageMatch[1] });
       return;

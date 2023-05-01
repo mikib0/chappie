@@ -113,7 +113,12 @@ app.post('/capture-paypal-order', async (req, res) => {
         },
       }
     );
-    await bot.sendMessage(decryptedUserId, message(PURCHASED_SUCCESSFUL, user.langCode, user.translate, { tokens }));
+    await bot
+      .sendMessage(
+        decryptedUserId,
+        message(PURCHASED_SUCCESSFUL, user.langCode, user.translate, { tokens })
+      )
+      .catch((err) => logger.error(`error while sending PURCHASE_SUCCESSFUL`, err));
 
     logger.info(`update stock`)
     await updateStock(logger, tokens);

@@ -37,9 +37,11 @@ async function handleImage({
   logger.info(`it's an image`);
   if (!imagePrompt.trim().length) {
     logger.info(`the guy doesnt know how use the /image command🙄`);
-    bot.sendMessage(chatId, message(IMAGE_GEN_HELP, langCode, translate), {
-      parse_mode: 'HTML',
-    });
+    bot
+      .sendMessage(chatId, message(IMAGE_GEN_HELP, langCode, translate), {
+        parse_mode: 'HTML',
+      })
+      .catch((err) => logger.error(`error while sending IMAGE_GEN_HELP`, err));
     return;
   }
   if (
@@ -48,19 +50,21 @@ async function handleImage({
     (!user.paid && user.tokens.referral + user.tokens.free < TOKENS_PER_IMAGE)
   ) {
     logger.info(`he doesnt have enough tokens to generate an image🤣`);
-    bot.sendMessage(
-      chatId,
-      message(BROKE_MSG, langCode, translate, {
-        tomorrowMidNight: new Date(tomorrowMidnight()),
-        reflink: getReferralLink(chatId),
-      }),
-      {
-        reply_markup: {
-          inline_keyboard: getPurchaseOptions(),
-        },
-        parse_mode: 'HTML',
-      }
-    );
+    bot
+      .sendMessage(
+        chatId,
+        message(BROKE_MSG, langCode, translate, {
+          tomorrowMidNight: new Date(tomorrowMidnight()),
+          reflink: getReferralLink(chatId),
+        }),
+        {
+          reply_markup: {
+            inline_keyboard: getPurchaseOptions(),
+          },
+          parse_mode: 'HTML',
+        }
+      )
+      .catch((err) => logger.error(`error while sending BROKE_MSG`, err));
     return;
   }
   if (!user.paid) await wait(chatId);
