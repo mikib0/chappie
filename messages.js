@@ -251,7 +251,7 @@ const messagesEnum = {
 };
 
 function message(theMessage, langCode, translate, replacers = {}) {
-  langCode = langCode && translate ? langCode : 'en';
+  langCode = !!langCode && translate ? langCode : 'en';
   theMessage = messages[langCode][theMessage];
   Object.entries(replacers).forEach(([replacer, value]) => {
     theMessage = theMessage.replaceAll(`%%${replacer}%%`, value);
