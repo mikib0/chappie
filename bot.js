@@ -6,7 +6,7 @@ let bot = null;
 // if (process.env.NODE_ENV === 'dev') {
   bot = new TelegramBot(
     process.env.NODE_ENV === 'dev'
-      ? process.env.process.env.CHAPPIE_TEST_TOKEN
+      ? process.env.CHAPPIE_TEST_TOKEN
       : process.env.CHAPPIE_TOKEN,
     { polling: true }
   );
