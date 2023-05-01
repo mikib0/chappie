@@ -273,7 +273,7 @@ bot.on('callback_query', async (query) => {
             [
               {
                 text: message(PURCHASE, langCode, translate),
-                url: `https://chappie.onrender.com/purchase?plan=${thePlanName}&uid=${enigma.encrypt(
+                url: `https://chappiepay.onrender.com/purchase?plan=${thePlanName}&uid=${enigma.encrypt(
                   chatId
                 )}`,
               },
