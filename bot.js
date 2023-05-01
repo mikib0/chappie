@@ -9,7 +9,7 @@ if (process.env.NODE_ENV === 'dev') {
   bot = new TelegramBot(process.env.CHAPPIE_TOKEN, {
     webHook: { port: process.env.BOT_PORT },
   });
-  bot.setWebHook(`https://chappie.onrender.com/bot${bot.token}`);
+  bot.setWebHook(`https://chappie.onrender.com:${BOT_PORT}/bot${bot.token}`);
 }
 
 module.exports = bot
