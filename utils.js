@@ -7,7 +7,9 @@ const {
 } = require('./messages');
 
 const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.NODE_ENV == 'dev'
+        ? process.env.OPENAI_API_TEST_KEY
+        : process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
 

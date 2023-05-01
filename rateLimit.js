@@ -32,7 +32,10 @@ class LimitResetter {
   }
 
   async resetLimit() {
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey =
+      process.env.NODE_ENV == 'dev'
+        ? process.env.OPENAI_API_TEST_KEY
+        : process.env.OPENAI_API_KEY;
     return await redis
       .multi()
       .get(`${apiKey}_imageRequests`)
