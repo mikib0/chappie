@@ -1,270 +1,315 @@
 if (process.env.NODE_ENV === 'dev') require('dotenv').config();
-const { User, Conversation } = require('./models')
-const TelegramBot = require('node-telegram-bot-api');
-const { getResponseText, getImage } = require('./utils')
-const chappieModelUpdateAnnouncement = require('./chappie_model_update_announcement') // TODO just make a new module, announcements.js, that holds all announcements
-const imageGenarationAnnounment = require('./image_generation_announment');
-const Sentry = require('@sentry/node');
+const {
+  models: {User},
+  utils: { updateOrCreateUser },
+} = require('./db');
+const {
+  enigma,
+  kFy,
+  getResponseOptions,
+  getPurchaseOptions,
+  getReferralLink,
+  getAccountKeyboard,
+} = require('./utils');
+const bot = require('./bot');
+const { plans, DAILY_INCOMING } = require('./constants');
+const { translations, options } = require('./chappieisback_translations')
 const { v4: uuid } = require('uuid');
+const paymentServer = require('./server');
+const {
+  messagesEnum: {
+    START_MSG,
+    RESPONSE_GEN_ERROR_MESSAGE,
+    PURCHASED,
+    FREE,
+    PAID,
+    REFERRAL,
+    REFERRAL_MSG,
+    HELP,
+    SUPPORT,
+    PAID_USER_BENEFITS,
+    ACCOUNT_INFO,
+    BACK_TO_ACCOUNT,
+    CHECKOUT,
+    PURCHASE,
+    BACK_TO_PURCHASE,
+    PURCHASE_TOKENS,
+    TRANSLATION,
+    DONATE,
+  },
+  message,
+} = require('./messages');
 
-Sentry.init({
-  dsn: 'https://6ba41d8320c04089864253cf1faabbd6@o4504962327576576.ingest.sentry.io/4504967188119552',
-  
-  tracesSampleRate: 0.2,
+const logFather = require('./logger');
+const {
+  handleReferral,
+  handlePurchase,
+  handleImage,
+  handleText,
+} = require('./handlers');
+const executionId = uuid();
+const processLogger = logFather.child({ label: 'process', id: executionId });
+
+processLogger.info('app starts');
+const PORT = process.env.PORT ?? 8922;
+paymentServer.listen(PORT, () => {
+  processLogger.info(`Server listening at ${PORT}`);
 });
 
-let bot = null;
-const WAIT_TIME = 3000; // TODO: move this to env
-const ERROR_MESSAGE =
-  "sorry we've messed up...please try resending your message. Mail mikibo.hamilton@aleeas.com or contact @miki_b0 on telegram if the problem persists.";
-const MAX_TOKEN_LIMIT = 4096;
+async function getAccountInfo(msg){
+  const user = await updateOrCreateUser(msg); // TODO this is redundant
+  const { paid, tokens, firstName, langCode, translate } = user
 
-// init bot
-if (process.env.NODE_ENV === 'dev') {
-  bot = new TelegramBot(process.env.CHAPPIE_TEST_TOKEN, { polling: true });
-} else if (process.env.NODE_ENV === 'prod') {
-  bot = new TelegramBot(process.env.CHAPPIE_TOKEN, {
-    webHook: { port: process.env.PORT },
+  return message(ACCOUNT_INFO, langCode, translate, {
+    firstName,
+    accountType: paid
+      ? message(PAID, langCode, translate)
+      : message(FREE, langCode, translate),
+    refLink: getReferralLink(msg.chat.id),
+    purchased: paid
+      ? message(PURCHASED, langCode) + ': ' + user.tokens.purchased + '\n\t'
+      : '',
+    referral: tokens.referral,
+    free: paid
+      ? ''
+      : message(FREE, langCode, translate) +
+        ': ' +
+        Math.abs(DAILY_INCOMING + tokens.free) +
+        '\n',
+    referralMsg: message(REFERRAL_MSG, langCode, translate),
   });
-  bot.setWebHook(`https://chappie.onrender.com/bot${bot.token}`);
 }
 
-async function wait(chatId) {
-  if (process.env.NODE_ENV === 'prod') {
-    // dont waste time in dev
-    // set 'typing' status
-    await new Promise((resolve) => setTimeout(resolve, WAIT_TIME));
-    bot.sendChatAction(chatId, 'typing');
-  }
-}
-
-function sendMessage(chatId, text, msgId) {
-  // TODO reply even when message is not found
-  const responseOptions = {
+async function handleAccount(msg, langCode, translate) {
+  bot.sendMessage(msg.chat.id, await getAccountInfo(msg), {
     reply_markup: {
-      inline_keyboard: [
-        [
-          {
-            text: 'regenerate',
-            callback_data: 'regenerate_' + msgId,
-          },
-        ],
-      ],
+      inline_keyboard: getAccountKeyboard(langCode, translate),
     },
-    reply_to_message_id: msgId,
-  };
-
-  return bot
-    .sendMessage(chatId, text, responseOptions)
-    .catch(Sentry.captureException);
-}
-
-async function getContext(dialogId) {
-  const context = [];
-  const dialog = await Conversation.find({ dialogId });
-  dialog.forEach((conversation) => {
-    context.push(
-      { role: 'user', content: conversation.text },
-      { role: 'assistant', content: conversation.response }
-    );
+    parse_mode: 'HTML',
   });
-  return context;
+
+  return;
 }
 
-async function saveConversation(msg, user, responseText, finishReason) {
+bot.on('channel_post', (msg) => {
+  logFather.child({ label: 'channel_post' }).info(msg);
+});
+
+async function handleOnText(msg, logger) {
+  const chatId = msg.chat.id;
+  const messageId = msg.message_id;
+  const userTgId = msg.from.id;
+  const text = msg.text;
+  const langCode = msg.from.language_code ?? 'en';
+  const date = msg.date;
+
+  const startMatch = text.match(/^\/start$/);
+  const begindialogMatch = text.match(/^\/begindialog$/);
+  const enddialogMatch = text.match(/^\/enddialog$/);
+  const referralMatch = text.match(/^\/start\s+(.+)/); // TODO the digit part wont match when we implement generating reflink with encrypted id
+  const imageMatch = text.match(/^\/image\s*(.*)$/);
+  const refLinkMatch = text.match(/^\/reflink/);
+  const balanceMatch = text.match(/^\/balance/);
+  const purchaseMatch = text.match(/^\/purchase/);
+  const accountMatch = text.match(/^\/account/);
+  const helpMatch = text.match(/^\/help/)
+  const supportMatch = text.match(/^\/support/)
+  
+  const args = { logger, chatId, date, langCode, text, messageId };
+
   try {
-    // save message to db
-    const conversation = {
-      messageId: msg.message_id,
-      user: user._id,
-      text: msg.text,
-      response: responseText,
-      date: new Date(msg.date * 1000),
-    };
-    if (user.isHavingDialog) conversation.dialogId = user.currentDialogId;
-    if (finishReason == 'content_filter') conversation.flagged = true;
-    await new Conversation(conversation).save();
-  } catch (error) {
-    Sentry.captureException(error);
-  }
-}
-
-// TODO use doc comment
-async function updateOrCreateUser(msg) {
-  // update the user info if the user exists else create a new user. and return the updated or created document
-  return User.findOneAndUpdate(
-    { chatTgId: msg.chat.id },
-    {
-      chatTgId: msg.chat.id,
-      firstName: msg.chat.first_name,
-      lastName: msg.chat.last_name,
-      username: msg.chat.username,
-    },
-    { upsert: true, new: true }
-    );
-  }
-
-async function getAndSendResponse(msg, user) {
-  const { isHavingDialog, currentDialogId } = user;
-  if (isHavingDialog) {
-    const { message_id: warningMessage_Id } = await bot.sendMessage(
-      msg.chat.id,
-      "Responses in a dialog might be slower and consume more tokens. We recommend that you end it (/enddialog) when you don't need it." // TODO format  as system message
-    );
-    const context = await getContext(currentDialogId);
-
-    await wait(msg.chat.id);
-    const { responseText, finishReason, totalTokens } = await getResponseText(
-      context,
-      msg.text
-    );
-
-    await bot.deleteMessage(msg.chat.id, warningMessage_Id)
-    sendMessage(msg.chat.id, responseText, msg.message_id)
-
-    if(totalTokens == MAX_TOKEN_LIMIT){
-      await User.findOneAndUpdate(
-        { chatTgId: msg.chat.id },
-        { isHavingDialog: false }
-      );
-      bot.sendMessage(
-        msg.chat.id,
-        'This dialog has exceeded the max limit and has been automatically ended. You can start a new one by using the /begindialog command' // TODO also tell them to consider using light dialog
-      ); // TODO format  as system message
+    if (referralMatch) {
+      handleReferral({ ...args, refreeId: referralMatch[1], msg });
+      return;
     }
-    
-    return { responseText, finishReason };
-  }
-
-  await wait(msg.chat.id);
-  // get chat response
-  const { responseText, finishReason } = await getResponseText(
-    [],
-    msg.text
-  );
-  sendMessage(msg.chat.id, responseText, msg.message_id);
-
-  return { responseText, finishReason };
-}
-
-
-bot.on('message', async (msg) => {
-  const user = await updateOrCreateUser(msg);
-  try {
-    if (msg.text.match(/^\/start$/)) {
-      // TODO make sendMessage universal by accepting object as argument
+    const user = await updateOrCreateUser(msg);
+    args.user = user;
+    if (startMatch) {
+      logger.info(`/start command from chat ${chatId}`);
       // create user if doesnt exist
-      updateOrCreateUser(msg);
-      return bot
+      logger.info('updating or creating user');
+      await updateOrCreateUser(msg);
+      logger.info('sending /start reply to user');
+      // TODO implement replacers
+      bot
         .sendMessage(
-          msg.chat.id,
-          `
-          Hello, <b>${msg.chat.first_name}</b>!
-Welcome to chappie, your AI assistant powered by chatGPT. Talk to me and I'll give you human like response. Try it now!
-
-Join <a href="t.me/chappieupdates">this channel</a> for updates about me.
-        `,
+          chatId,
+          message(START_MSG, langCode, user.translate, {
+            first_name: user.firstName,
+          }),
           {
             parse_mode: 'HTML',
           }
         )
-        .catch(Sentry.captureException);
-    } else if (msg.text.match(/^\/begindialog$/)) {
-      if (!user.isHavingDialog) {
-        await User.findOneAndUpdate(
-          { chatTgId: msg.chat.id },
-          { isHavingDialog: true, currentDialogId: uuid() }
-        );
-        return bot
-          .sendMessage(
-            msg.chat.id,
-            'Dialog has started. Please note that reponses in a dialog might be slower and consume more tokens. You can end the dialog (by sending /enddialog command).'
-          )
-          .catch(Sentry.captureException);
-      } else {
-        return bot
-          .sendMessage(msg.chat.id, 'There is already an ongoing dialog.')
-          .catch(Sentry.captureException);
-      }
-    } else if (msg.text.match(/^\/enddialog$/)) {
-      await User.findOneAndUpdate(
-        { chatTgId: msg.chat.id },
-        { isHavingDialog: false }
+        .catch((err) => logger.error(`error while sending START_MSG`, err));
+      return;
+    } else if(helpMatch){
+      logger.info(`pile is looking for help`)
+      bot.sendMessage(chatId, message(HELP, langCode, user.translate))
+    } else if(supportMatch){
+      logger.info(`this guy wants to disbturb me with complaints🙄`);
+      bot.sendMessage(chatId, message(SUPPORT, langCode, user.translate))
+    } else if (refLinkMatch) {
+      logger.info(`the guy wants to get his referral link`);
+      bot.sendMessage(chatId, `<code>${getReferralLink(chatId)}</code>`, {parse_mode: 'HTML'});
+    } else if (balanceMatch) {
+      logger.info(`pile wants to see his balance`);
+      bot.sendMessage(
+        chatId,
+        user.paid
+          ? `${message(PURCHASED, langCode, user.translate)}: ${
+              user.tokens.purchased
+            }\n${message(REFERRAL, langCode, user.translate)}: ${
+              user.tokens.referral
+            }`
+          : `${message(FREE, langCode, user.translate)}: ${Math.abs(
+              DAILY_INCOMING + user.tokens.free
+            )}\n${message(REFERRAL, langCode, user.translate)}: ${
+              user.tokens.referral
+            }\n<i>${message(REFERRAL_MSG, langCode, user.translate)}</i>`,
+        {
+          parse_mode: 'HTML',
+        }
       );
-      return bot
-        .sendMessage(msg.chat.id, 'Dialog has ended.')
-        .catch(Sentry.captureException);
-    } else if(msg.text.match(/^\/image$/)){
-      return bot.sendMessage(
-        msg.chat.id,
-        `
-      📷 Image generation \n\n Type: /image followed by a detailed image description \n Example: /image a white siamese cat
-      `) // TODO replace '[new feature] ...' title with 'image generation' in translations so and add translation buttons to this message
-    } else if(msg.text.match(/^\/image/)){
-      const imgPrompt = msg.text.substr(6) // 6 is the length of '/image'
-      await wait(msg.chat.id);
-      const imgUrl = await getImage(imgPrompt)
-      return bot.sendPhoto(msg.chat.id, imgUrl, {
-        reply_to_message_id: msg.message_id,
-      });
-    }
-
-    const { responseText, finishReason } = await getAndSendResponse(msg, user);
-
-    try {
-      await saveConversation(msg, user, responseText, finishReason);
-    } catch (err) {
-      Sentry.captureException(err);
+    } else if (purchaseMatch) {
+      handlePurchase(args);
+    } else if (accountMatch) {
+      handleAccount(msg, langCode, user.translate);
+    } else if (imageMatch) {
+      handleImage({ ...args, imagePrompt: imageMatch[1] });
+      return;
+    } else {
+      handleText({ ...args, msg });
     }
   } catch (error) {
-    Sentry.captureException(error);
-    sendMessage(msg.chat.id, ERROR_MESSAGE, msg.message_id);
+    logger.error(
+      `an error occured during the course of processing text`,
+      error
+    );
+    bot
+      .sendMessage(
+        chatId,
+        message(RESPONSE_GEN_ERROR_MESSAGE, langCode, user.translate),
+        getResponseOptions(messageId)
+      )
+      .catch((err) =>
+        logger.error(
+          `an error occured while sending RESPONSE_GEN_ERROR_MESSAGE💀`,
+          err
+        )
+      );
   }
+}
+
+bot.on('text', (msg) => {
+  const logger = logFather.child({ label: 'on_text', id: uuid() });
+  logger.info(`text received, messageId=${msg.message_id}`);
+  handleOnText(msg, logger);
 });
 
 bot.on('callback_query', async (query) => {
   const chatId = query.message.chat.id;
-  if (query.data.startsWith('regenerate_')) {
-    const user = await updateOrCreateUser(query.message);
-    const messageId = Number(query.data.substr(11));
+  const messageId = query.message.message_id;
+  const msg = query.message;
+  const data = query.data;
+  const user = await updateOrCreateUser(msg)
 
-    try {
-      const { responseText, finishReason } = await getAndSendResponse(
-        query.message.reply_to_message,
-        user
-      );
+  const { langCode, translate, chatTgId } = user
 
-      try {
-        await saveConversation(
-          query.message.reply_to_message,
-          user,
-          responseText,
-          finishReason
-        );
-      } catch (err) {
-        Sentry.captureException(err);
-      }
-    } catch (err) {
-      Sentry.captureException(err);
-      sendMessage(chatId, ERROR_MESSAGE, messageId);
-    }
-  } else if (query.data.startsWith('translate_chappie_uses_chatgpt_'))
+  if (data.startsWith('regenerate')) {
+    const msgToRegenerate = query.message.reply_to_message;
+    const logger = logFather.child({ label: 'regenerate', id: uuid() });
+    msgToRegenerate.date = query.message.date;
+    logger.info(`regenerate message, message_id=${msgToRegenerate.message_id}`);
+    handleOnText(msgToRegenerate, logger);
+  } else if (data.startsWith('account')) {
+    bot.editMessageText(await getAccountInfo(msg), {
+      chat_id: chatId,
+      message_id: messageId,
+      reply_markup: {
+        inline_keyboard: getAccountKeyboard(langCode, translate), // TODO (translation)
+      },
+      parse_mode: 'HTML',
+    });
+  } else if (data.startsWith('purchase_options')) {
+    bot.editMessageText(message(PAID_USER_BENEFITS, langCode, translate), {
+      chat_id: chatId,
+      message_id: messageId,
+      reply_markup: {
+        inline_keyboard: [
+          ...getPurchaseOptions(chatId),
+          [
+            {
+              text: message(BACK_TO_ACCOUNT, langCode, translate),
+              callback_data: 'account',
+            },
+          ],
+        ],
+      },
+    });
+  } else if (data.startsWith('purchase_')) {
+    const thePlanName = data.substring('purchase_'.length);
+    const thePlan = plans[thePlanName];
     bot.editMessageText(
-      chappieModelUpdateAnnouncement.translations[query.data.substr(-2)],
+      message(CHECKOUT, langCode, translate, {
+        // TODO (translation)
+        thePlanName,
+        tokens: kFy(thePlan.tokens),
+        price: thePlan.price,
+      }),
       {
         chat_id: chatId,
-        message_id: query.message.message_id,
-        ...chappieModelUpdateAnnouncement.options,
+        message_id: messageId,
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: message(PURCHASE, langCode, translate),
+                url: `http://chappie.render.com/purchase?plan=${thePlanName}&uid=${enigma.encrypt(
+                  chatId
+                )}`,
+              },
+            ],
+            [
+              {
+                text: message(BACK_TO_PURCHASE, langCode, translate),
+                callback_data: 'purchase_options',
+              },
+            ],
+          ],
+        },
+        parse_mode: 'HTML',
       }
-    ).catch(err=>Sentry.captureException(err));
-  else if (query.data.startsWith('translate_image_generation_'))
-    bot.editMessageText(
-      imageGenarationAnnounment.translations[query.data.substr(-2)],
-      {
-        chat_id: query.message.chat.id,
-        message_id: query.message.message_id,
-        ...imageGenarationAnnounment.options,
-      }
-    ).catch(err=> Sentry.captureException(err));
-
+    );
+  } else if (data.startsWith('toggle_translation')) {
+    await User.findOneAndUpdate(
+      { chatTgId },
+      { $set: { translate: !translate } },
+      { new: true }
+    );
+    bot.editMessageText(await getAccountInfo(msg), {
+      chat_id: chatId,
+      message_id: messageId,
+      reply_markup: {
+        inline_keyboard: getAccountKeyboard(langCode, !translate), // TODO (translation)
+      },
+      parse_mode: 'HTML',
+    });
+  } else if (data.startsWith('translate_chapppieisback_')) {
+    const lang = data.substring('translate_chapppieisback_'.length);
+    bot.editMessageText(translations[lang], {
+      chat_id: query.message.chat.id,
+      message_id: messageId,
+      ...options,
+    });
+  }
+  // else if(data.startsWith('check_sub')){
+  //   const channelUsername = 'chappie_updates'
+  //   const chatMember = await bot.getChatMember(channelUsername, userId);
+  //   if (chatMember.status === 'member' || chatMember.status === 'creator') {
+  //     bot.editMessageText('You are a subscriber of the channel!', { chat_id: chatId, message_id: msgId });
+  //   } else {
+  //     bot.editMessageText('You have not subscribed!', { chat_id: chatId, message_id: msgId });
+  //   }
+  // }
 });

@@ -1,0 +1,74 @@
+  <!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="shortcut icon" href="../chappie_pic-nobg.png" type="image/x-icon">
+    <link rel="stylesheet" href="output.css">
+  </head>
+  <body class="font-sans">
+    <script src="https://www.paypal.com/sdk/js?client-id=AS9G6sba1cxS-s0vWD9xJYuAXs6NUsAxT3cKRLbs6pm_iew9zJmMPxCOMDCFQYodWhP5uT_Lv1yopU5S&currency=USD"></script>
+    <div class="w-2/3 mx-auto mt-10 text-center">
+      <h1 class="text-slate-500 text-2xl uppercase">chappie pay</h1>
+      <main>
+        <div id="purchase_init">
+
+          <p class="text-slate-950 text-xl">purchase <span class="font-semibold"><%= tokens %></span> tokens at <span class="font-semibold">$<%= price %></span> for: <span class="font-semibold"><%= name %> </span></p>
+          <!-- <p>please only pay with the link that was generated to you by chappie</p> -->
+        
+        <!-- Set up a container element for the button -->
+          <div class="scale-75" id="paypal-button-container"></div>
+        </div>
+        <div class="text-lg hidden" id="purchase_success">
+          <h2 class='text'>congratulations🙌 your purchase was successful!</h2>
+          <div><a class="text-blue-400 underline" href='https://t.me/gpt3_tgBot'>return to chappie</a></div>
+        </div>
+    </main>
+
+    </div>
+    <script>
+      paypal
+        .Buttons({
+          // Sets up the transaction when a payment button is clicked
+          createOrder: function () {
+            return fetch("/create-paypal-order", {
+              method: "post",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              // use the "body" param to optionally pass additional order information
+              // like product skus and quantities
+              body: JSON.stringify({
+                plan: '<%= plan %>',
+                userId: '<%= uid %>',
+                logId: '<%= logId %>'
+              }),
+            })
+              .then((response) => response.json())
+              .then((order) => order.id).catch(console.log);
+          },
+          // Finalize the transaction after payer approval
+          onApprove: function (data) {
+            return fetch("/capture-paypal-order", {
+              method: "post",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                orderID: data.orderID,
+                logId: '<%= logId %>'
+              }),
+            })
+              .then((response) => response.json())
+              .then((tokens) => {
+                // const transaction = orderData.purchase_units[0].payments.captures[0];
+                document.querySelector('#purchase_init').style.display = 'none'
+                document.querySelector('#purchase_success').style.display = 'block'
+              }).catch(()=>{
+                console.log('i should be notified IMMEDIATELY!! because payment is successful but user balance might not be funded')
+              });
+          },
+        })
+        .render("#paypal-button-container");
+    </script>
+  </body>
+</html>

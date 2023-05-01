@@ -4,7 +4,7 @@
   "description": "Chappie is a Telegram bot that leverages the OpenAI API to allow users to communicate with a large language model directly through the Telegram platform.",
   "main": "index.js",
   "scripts": {
-    "dev": "export NODE_ENV=dev;nodemon .",
+    "dev": "export NODE_ENV=dev;nodemon index.js",
     "start": "export NODE_ENV=prod;node index.js"
   },
   "keywords": [],
@@ -12,13 +12,20 @@
   "license": "GPL",
   "dependencies": {
     "@sentry/node": "^7.47.0",
+    "cloudinary": "^1.36.1",
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
     "mongoose": "^6.8.1",
+    "node-fetch-cjs": "^3.2.10",
     "node-telegram-bot-api": "^0.60.0",
     "openai": "^3.2.1",
-    "uuid": "^9.0.0"
+    "redis": "^4.6.5",
+    "uuid": "^9.0.0",
+    "winston": "^3.8.2"
   },
   "devDependencies": {
     "dotenv": "^16.0.3",
-    "nodemon": "^2.0.20"
+    "nodemon": "^2.0.20",
+    "tailwindcss": "^3.3.2"
   }
 }
