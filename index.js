@@ -15,7 +15,7 @@ const bot = require('./bot');
 const { plans, DAILY_INCOMING } = require('./constants');
 const { translations, options } = require('./chappieisback_translations')
 const { v4: uuid } = require('uuid');
-const paymentServer = require('./server');
+// const paymentServer = require('./payment-server');
 const {
   messagesEnum: {
     START_MSG,
@@ -221,12 +221,12 @@ bot.on('callback_query', async (query) => {
   const msg = query.message;
   const data = query.data;
   const user = await updateOrCreateUser(msg)
+  const logger = logFather.child({ label: 'regenerate', id: uuid() });
 
   const { langCode, translate, chatTgId } = user
 
   if (data.startsWith('regenerate')) {
     const msgToRegenerate = query.message.reply_to_message;
-    const logger = logFather.child({ label: 'regenerate', id: uuid() });
     msgToRegenerate.date = query.message.date;
     logger.info(`regenerate message, message_id=${msgToRegenerate.message_id}`);
     handleOnText(msgToRegenerate, logger);
@@ -238,7 +238,7 @@ bot.on('callback_query', async (query) => {
         inline_keyboard: getAccountKeyboard(langCode, translate), // TODO (translation)
       },
       parse_mode: 'HTML',
-    });
+    }).catch(err=>logger.error(`error while mounting accountInfo`, err));
   } else if (data.startsWith('purchase_options')) {
     bot.editMessageText(message(PAID_USER_BENEFITS, langCode, translate), {
       chat_id: chatId,
@@ -254,7 +254,7 @@ bot.on('callback_query', async (query) => {
           ],
         ],
       },
-    });
+    }).catch(err=>logger.error(`error while mounting purchase_options`));
   } else if (data.startsWith('purchase_')) {
     const thePlanName = data.substring('purchase_'.length);
     const thePlan = plans[thePlanName];
@@ -288,7 +288,7 @@ bot.on('callback_query', async (query) => {
         },
         parse_mode: 'HTML',
       }
-    );
+    ).catch(err=>logger.error(`error while mounting purchase_`));
   } else if (data.startsWith('toggle_translation')) {
     await User.findOneAndUpdate(
       { chatTgId },
@@ -302,14 +302,18 @@ bot.on('callback_query', async (query) => {
         inline_keyboard: getAccountKeyboard(langCode, !translate), // TODO (translation)
       },
       parse_mode: 'HTML',
-    });
+    }).catch(err=>logger.error(`error while mounting toggle_translation translate=${!translate}`, err));
   } else if (data.startsWith('translate_chapppieisback_')) {
     const lang = data.substring('translate_chapppieisback_'.length);
-    bot.editMessageText(translations[lang], {
-      chat_id: query.message.chat.id,
-      message_id: messageId,
-      ...options,
-    });
+    bot
+      .editMessageText(translations[lang], {
+        chat_id: query.message.chat.id,
+        message_id: messageId,
+        ...options,
+      })
+      .catch((err) =>
+        logger.error(`error while mounting translate_chapppieisback_ lang=${lang}`, err)
+      );
   }
   // else if(data.startsWith('check_sub')){
   //   const channelUsername = 'chappie_updates'

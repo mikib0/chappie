@@ -1,15 +1,15 @@
 const mongoose = require('mongoose');
 const logFather = require('../logger');
 
-(async ()=> {
-  const logger = logFather.child({ label: 'mongo' })
+(async () => {
+  const logger = logFather.child({ label: 'mongo' });
   try {
     await mongoose.connect(process.env.DB_URI);
     logger.info('DB CONNECTION ESTABLISHED...');
   } catch (error) {
     logger.error('DB CONNNECTION FAILED:', error);
   }
-})()
+})();
 
 const User = mongoose.model('User', {
   chatTgId: Number,
@@ -41,7 +41,7 @@ const Conversation = mongoose.model('Conversation', {
   messageId: Number,
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Users'
+    ref: 'Users',
   },
   type: String,
   text: String,
@@ -49,10 +49,10 @@ const Conversation = mongoose.model('Conversation', {
   date: Date,
   dialogId: String,
   tokens: Number,
-  flagged: Boolean
+  flagged: Boolean,
 });
 
 module.exports = {
   User,
-  Conversation
-}
+  Conversation,
+};

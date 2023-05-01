@@ -1,21 +1,22 @@
-// require('dotenv').config()
+if (process.env.NODE_ENV !== 'dev') require('dotenv').config();
 const express = require('express');
-const bot = require('./bot.js');
+// const bot = require('../bot.js');
 const paypal = require('./paypal-api.js');
-const { enigma, getTokensFromPrice } = require('./utils');
-const { plans } = require('./constants');
-const { User } = require('./db/models.js');
-const { updateStock, checkStock, userExists } = require('./db/utils');
-const logFather = require('./logger');
+const { enigma, getTokensFromPrice } = require('../utils');
+const { plans } = require('../constants');
+const { User } = require('../db/models.js');
+const { updateStock, checkStock, userExists } = require('../db/utils');
+const logFather = require('../logger');
 const { v4: uuid } = require('uuid');
-const {messagesEnum: {PURCHASED_SUCCESSFUL}, message} = require('./messages')
-const { PORT = 8888 } = process.env;
+// const {messagesEnum: {PURCHASED_SUCCESSFUL}, message} = require('../messages')
+const { PORT=8888 } = process.env
 
 const app = express();
 
-app.use(express.static('public'));
+app.use(express.static(__dirname + '/public'));
 
 app.set('view engine', 'ejs');
+app.set('views', __dirname + '/views')
 
 app.get('/purchase', async (req, res) => {
   const logId = uuid();
@@ -113,12 +114,12 @@ app.post('/capture-paypal-order', async (req, res) => {
         },
       }
     );
-    await bot
-      .sendMessage(
-        decryptedUserId,
-        message(PURCHASED_SUCCESSFUL, user.langCode, user.translate, { tokens })
-      )
-      .catch((err) => logger.error(`error while sending PURCHASE_SUCCESSFUL`, err));
+    // await bot
+    //   .sendMessage(
+    //     decryptedUserId,
+    //     message(PURCHASED_SUCCESSFUL, user.langCode, user.translate, { tokens })
+    //   )
+    //   .catch((err) => logger.error(`error while sending PURCHASE_SUCCESSFUL`, err));
 
     logger.info(`update stock`)
     await updateStock(logger, tokens);
@@ -132,8 +133,8 @@ app.post('/capture-paypal-order', async (req, res) => {
   }
 });
 
-// app.listen(PORT, ()=>{
-//   console.log(`http://localhost:8888/basic/${PORT}`)
-// })
+app.listen(PORT, ()=>{
+  console.log(`http://localhost:${PORT}/basic`);
+})
 
 module.exports = app;

@@ -1,7 +1,7 @@
 const {default: fetch} = require('node-fetch-cjs');
 const uuid = require('uuid');
-const { plans } = require('./constants');
-const { kFy } = require('./utils');
+const { plans } = require('../constants');
+const { kFy } = require('../utils');
 const { CLIENT_ID, APP_SECRET } = process.env;
 const base = "https://api-m.paypal.com"; // TODO replace with live url
 
@@ -61,6 +61,7 @@ async function capturePayment(orderId) {
 
 async function generateAccessToken() {
   const auth = Buffer.from(CLIENT_ID + ":" + APP_SECRET).toString("base64");
+  console.log('the secret: ', auth);
   const response = await fetch(`${base}/v1/oauth2/token`, {
     method: "post",
     body: "grant_type=client_credentials",
