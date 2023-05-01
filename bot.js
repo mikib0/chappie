@@ -7,7 +7,7 @@ if (process.env.NODE_ENV === 'dev') {
   bot = new TelegramBot(process.env.CHAPPIE_TEST_TOKEN, { polling: true });
 } else if (process.env.NODE_ENV === 'prod') {
   bot = new TelegramBot(process.env.CHAPPIE_TOKEN, {
-    webHook: { port: process.env.PORT },
+    webHook: { port: process.env.BOT_PORT },
   });
   bot.setWebHook(`https://chappie.onrender.com/bot${bot.token}`);
 }
