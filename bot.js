@@ -3,15 +3,20 @@ const TelegramBot = require('node-telegram-bot-api');
 let bot = null;
 
 // init bot
-if (process.env.NODE_ENV === 'dev') {
-  bot = new TelegramBot(process.env.CHAPPIE_TEST_TOKEN, { polling: true });
-} else if (process.env.NODE_ENV === 'prod') {
-  bot = new TelegramBot(process.env.CHAPPIE_TOKEN, {
-    webHook: { port: process.env.BOT_PORT },
-  });
-  bot.setWebHook(
-    `https://chappie.onrender.com:${process.env.BOT_PORT}/bot${bot.token}`
+// if (process.env.NODE_ENV === 'dev') {
+  bot = new TelegramBot(
+    process.env.NODE_ENV === 'dev'
+      ? process.env.process.env.CHAPPIE_TEST_TOKEN
+      : process.env.CHAPPIE_TOKEN,
+    { polling: true }
   );
-}
+// } else if (process.env.NODE_ENV === 'prod') {
+  // bot = new TelegramBot(process.env.CHAPPIE_TOKEN, {
+    // webHook: { port: process.env.BOT_PORT },
+  // });
+  // bot.setWebHook(
+    // `https://chappie.onrender.com:${process.env.BOT_PORT}/bot${bot.token}`
+  // );
+// }
 
 module.exports = bot
