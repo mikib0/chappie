@@ -4,7 +4,7 @@ const {
   message,
 } = require('../messages');
 const { imageWait } = require('../rateLimit');
-const { TOKENS_PER_IMAGE } = require('../constants');
+const { TOKENS_PER_IMAGE, DAILY_INCOMING } = require('../constants');
 const {
   getImage,
   wait,
@@ -47,7 +47,9 @@ async function handleImage({
   if (
     (user.paid &&
       user.tokens.purchased + user.tokens.referral < TOKENS_PER_IMAGE) ||
-    (!user.paid && user.tokens.referral + user.tokens.free < TOKENS_PER_IMAGE)
+    (!user.paid &&
+      user.tokens.referral + (DAILY_INCOMING + user.tokens.free) <
+        TOKENS_PER_IMAGE)
   ) {
     logger.info(`he doesnt have enough tokens to generate an image🤣`);
     bot
