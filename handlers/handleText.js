@@ -53,13 +53,14 @@ async function handleText({
         }
       );
     }
+
     // instead of initially giving him DAILY_INCOMING
     // and substract usage till it reaches 0,...
     // we substract usage from 0 till it reaches -DAILY_INCOMING
     // so user.tokens.free is actually = -consumedTokens
     const userFreeTokens = DAILY_INCOMING + user.tokens.free;
-    const hasFreeTokens = userFreeTokens > 0;
-    const hasReferralTokens = user.tokens.referral > 0;
+    const hasFreeTokens = userFreeTokens > 0; // TODO(openai fixes) ==
+    const hasReferralTokens = user.tokens.referral > 0; // TODO(openai fixes) ==
 
     // if the free user doesnt have freetokens and referral tokens
     if (!hasFreeTokens && !hasReferralTokens) {
@@ -100,7 +101,9 @@ async function handleText({
             parse_mode: 'HTML',
           }
         )
-        .catch((err) => logger.error(`error while sending NO_FREE_TOKENS`, err));
+        .catch((err) =>
+          logger.error(`error while sending NO_FREE_TOKENS`, err)
+        );
       return;
     }
   }
