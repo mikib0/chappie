@@ -221,11 +221,12 @@ bot.on('callback_query', async (query) => {
   const msg = query.message;
   const data = query.data;
   const user = await updateOrCreateUser(msg)
-  let logger = logFather.child({ label: 'callback_query', id: uuid() });
-
+  const logger = logFather.child({ label: 'callback', id: uuid() });
+  
   const { langCode, translate, chatTgId } = user
-
+  
   if (data.startsWith('regenerate')) {
+    const logger = logFather.child({ label: 'regenerate', id: uuid() });
     const msgToRegenerate = query.message.reply_to_message;
     msgToRegenerate.date = query.message.date;
     logger.info(`regenerate message, message_id=${msgToRegenerate.message_id}`);
