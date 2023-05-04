@@ -41,7 +41,7 @@ async function updateUserTokens(logger, chatId, totalTokens, user) {
         $set: {
           'tokens.purchased': update.purchased,
           'tokens.free': update.free,
-          'tokens.referral': update.referral,
+          'tokens.referral': update.referral < 0 ? 0 : update.referral // TODO(until openai fixes maxTokens),
         },
       }
     );
