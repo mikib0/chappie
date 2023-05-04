@@ -47,7 +47,7 @@ async function updateUserTokens(logger, chatId, totalTokens, user) {
     );
     logger.info(`user tokens updated`);
   } catch (err) {
-    logger.error('error while updating uset tokens', err);
+    logger.error('error while updating user tokens', err);
   }
 }
 
