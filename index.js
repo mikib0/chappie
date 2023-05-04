@@ -221,7 +221,7 @@ bot.on('callback_query', async (query) => {
   const msg = query.message;
   const data = query.data;
   const user = await updateOrCreateUser(msg)
-  const logger = logFather.child({ label: 'regenerate', id: uuid() });
+  let logger = logFather.child({ label: 'callback_query', id: uuid() });
 
   const { langCode, translate, chatTgId } = user
 
@@ -240,6 +240,7 @@ bot.on('callback_query', async (query) => {
       parse_mode: 'HTML',
     }).catch(err=>logger.error(`error while mounting accountInfo`, err));
   } else if (data.startsWith('purchase_options')) {
+    logger.info(`sending purchase plans to ${chatId}`)
     bot.editMessageText(message(PAID_USER_BENEFITS, langCode, translate), {
       chat_id: chatId,
       message_id: messageId,
@@ -254,10 +255,11 @@ bot.on('callback_query', async (query) => {
           ],
         ],
       },
-    }).catch(err=>logger.error(`error while mounting purchase_options`));
+    }).catch(err=>logger.error(`error while mounting purchase_options`, err));
   } else if (data.startsWith('purchase_')) {
     const thePlanName = data.substring('purchase_'.length);
     const thePlan = plans[thePlanName];
+    logger.info(`sending purchase plan ${thePlanName} to ${chatId}`)
     bot.editMessageText(
       message(CHECKOUT, langCode, translate, {
         // TODO (translation)
@@ -288,7 +290,7 @@ bot.on('callback_query', async (query) => {
         },
         parse_mode: 'HTML',
       }
-    ).catch(err=>logger.error(`error while mounting purchase_`));
+    ).catch(err=>logger.error(`error while mounting purchase_`, err));
   } else if (data.startsWith('toggle_translation')) {
     await User.findOneAndUpdate(
       { chatTgId },
