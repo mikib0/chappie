@@ -45,15 +45,6 @@ async function handleReferral({logger, refreeId, chatId, langCode, msg}) {
     
   logger.info(`creating new user`)
   await updateOrCreateUser(msg)
-   await User.findOneAndUpdate(
-     { chatTgId: chatId },
-     {
-       $set: {
-         'tokens.free': 0,
-         'tokens.freeTokens_expiryDate_ms': tomorrowMidnight(),
-       },
-     },
-   );
   logger.info(`${refreeId} referred ${chatId}✅`);
 }
 

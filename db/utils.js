@@ -63,7 +63,7 @@ async function updateOrCreateUser(msg) {
       username: msg.chat.username,
       langCode: msg.from.language_code ?? 'en',
     },
-    { upsert: false, new: true }
+    { upsert: false }
   );
 // TODO what if i can just set default values for the fields 
     if (!user) {
