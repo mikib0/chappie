@@ -108,7 +108,7 @@ async function handleText({
     }
   }
 
-  if (!user.paid) await wait(chatId);
+  if (!user.paid) await wait(chatId, bot);
   await textWait(logger, maxTokens);
   const { responseText, totalTokens, finishReason } = await getResponseText(
     logger,

@@ -100,7 +100,7 @@ app.post('/capture-paypal-order', async (req, res) => {
     const user = await User.findOneAndUpdate(
       { chatTgId: decryptedUserId },
       {
-        $set: { paid: true }, // TODO (checklist) increment tokens.purchased
+        $set: { paid: true },
         $inc: { 'tokens.purchased': tokens },
         $push: {
           purchases: [

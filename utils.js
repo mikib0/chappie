@@ -1,6 +1,6 @@
 const { Configuration, OpenAIApi } = require('openai');
 const { plans, WAIT_TIME } = require('./constants');
-const bot = require('./bot');
+// const bot = require('./bot');
 const {
   message,
   messagesEnum: { PURCHASE_TOKENS, DONATE, TRANSLATION, REGENERATE },
@@ -83,7 +83,7 @@ function getTokensFromPrice(price) {
   }
 }
 
-async function wait(chatId) {
+async function wait(chatId, bot) {
   if (process.env.NODE_ENV === 'prod') {
     // dont waste time in dev
     // set 'typing' status

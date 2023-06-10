@@ -69,7 +69,7 @@ async function handleImage({
       .catch((err) => logger.error(`error while sending BROKE_MSG`, err));
     return;
   }
-  if (!user.paid) await wait(chatId);
+  if (!user.paid) await wait(chatId, bot);
   await imageWait(logger);
   logger.info(`generating photo`);
   const imgUrl = await getImage(imagePrompt);
